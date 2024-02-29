@@ -49,41 +49,43 @@ class Tree:
         scenery_py = make_merlict_scenery_py(vertices=vertices, faces=faces)
         self._tree = merlict.compile(sceneryPy=scenery_py)
 
-    def _make_probing_rays(self, cxcycz):
-        assert len(cxcycz.shape) == 2
-        assert cxcycz.shape[1] == 3
-
-        size = cxcycz.shape[0]
+    def _make_probing_rays(self, cx, cy, cz):
+        size = len(cx)
         rays = merlict.ray.init(size)
         rays["support.x"] = np.zeros(size)
         rays["support.y"] = np.zeros(size)
         rays["support.z"] = np.zeros(size)
-        rays["direction.x"] = cxcycz[:, 0]
-        rays["direction.y"] = cxcycz[:, 1]
-        rays["direction.z"] = cxcycz[:, 2]
+        rays["direction.x"] = cx
+        rays["direction.y"] = cy
+        rays["direction.z"] = cz
         return rays
 
     def query_azimuth_zenith(self, azimuth_rad, zenith_rad):
         cx, cy, cz = spherical_coordinates.az_zd_to_cx_cy_cz(
             azimuth_rad=azimuth_rad, zenith_rad=zenith_rad
         )
-        cxcycz = np.c_[cx, cy, cz]
-        return self.query_cxcycz(cxcycz=cxcycz)
+        return self.query_cx_cy_cz(cx=cx, cy=cy, cz=cz)
 
     def query_cx_cy(self, cx, cy):
         cz = spherical_coordinates.restore_cz(cx=cx, cy=cy)
-        cxcycz = np.c_[cx, cy, cz]
-        return self.query_cxcycz(cxcycz=cxcycz)
+        return self.query_cx_cy_cz(cx=cx, cy=cy, cz=cz)
 
-    def query_cxcycz(self, cxcycz):
-        assert len(cxcycz.shape) == 2
-        assert cxcycz.shape[1] == 3
-        size = cxcycz.shape[0]
+    def query_cx_cy_cz(self, cx, cy, cz):
+        cx_is_scalar, cx = spherical_coordinates.dimensionality._in(x=cx)
+        cy_is_scalar, cy = spherical_coordinates.dimensionality._in(x=cy)
+        cz_is_scalar, cz = spherical_coordinates.dimensionality._in(x=cz)
+        assert cx_is_scalar == cy_is_scalar
+        assert cx_is_scalar == cz_is_scalar
+        is_scalar = cx_is_scalar
 
-        rays = self._make_probing_rays(cxcycz=cxcycz)
+        rays = self._make_probing_rays(cx=cx, cy=cy, cz=cz)
         _hits, _intersecs = self._tree.query_intersection(rays)
+        size = len(rays)
 
         face_ids = np.zeros(size, dtype=int)
         face_ids[np.logical_not(_hits)] = -1
         face_ids[_hits] = _intersecs["geometry_id.face"][_hits]
-        return face_ids
+        return spherical_coordinates.dimensionality._out(
+            is_scalar=is_scalar,
+            x=face_ids,
+        )

@@ -9,12 +9,33 @@ import copy
 
 
 class HemisphereHistogram:
+    """
+    Histogram pointings/directions in a hemisphere.
+
+    Fields
+    ------
+    bin_counts : numpy.array
+        The contetn of the bins.
+    overflow : int
+        When a pointong is assigned to the histogram which does not hit any bin
+        this overflow counter is raised.
+    bin_geometry : spherical_histogram.geometry.HemisphereGeometry
+        The geometry of the bins. Each bin is a triangular face on the unit
+        sphere. Faces are defined by their vertices. The bin_geometry stores
+        theses vertices and the faces. It further knows the face's neigboring
+        relations and each face's solid angle.
+    """
+
     def __init__(
         self,
         num_vertices=2047,
         max_zenith_distance_rad=np.deg2rad(89.0),
         bin_geometry=None,
     ):
+        """
+        Provide either a ``bin_geometry``, or ``num_vertices`` and
+        ``max_zenith_distance_rad`` to create a bin_geometry on the fly.
+        """
         if bin_geometry is None:
             self.bin_geometry = geometry.HemisphereGeometry(
                 num_vertices=num_vertices,
@@ -27,15 +48,14 @@ class HemisphereHistogram:
 
     def reset(self):
         """
-        Resets the bin content to zero.
+        Resets the bin content ``bin_counts`` and  the ``overflow`` to zero.
         """
         self.overflow = 0
         self.bin_counts = np.zeros(len(self.bin_geometry.faces), dtype=int)
 
     def solid_angle(self, threshold=1):
         """
-        Returns the solid angle of all faces with a content above a certain
-        threshold.
+        Returns the total solid angle of all bins with a content >= threshold.
 
         Parameters
         ----------
@@ -57,8 +77,8 @@ class HemisphereHistogram:
                 total_sr += self.bin_geometry.faces_solid_angles[iface]
         return total_sr
 
-    def assign_cxcycz(self, cxcycz):
-        faces = self.bin_geometry.query_cxcycz(cxcycz=cxcycz)
+    def assign_cx_cy_cz(self, cx, cy, cz):
+        faces = self.bin_geometry.query_cx_cy_cz(cx=cx, cy=cy, cz=cz)
         self._assign(faces)
 
     def assign_cx_cy(self, cx, cy):
@@ -72,14 +92,16 @@ class HemisphereHistogram:
         )
         self._assign(faces)
 
-    def assign_cone_cxcycz(self, cxcycz, half_angle_rad):
+    def assign_cone_cx_cy_cz(self, cx, cy, cz, half_angle_rad):
         """
         Assign
 
         Parameters
         ----------
-        cxcycz
+        cx : float
         """
+        cxcycz = np.asarray([cx, cy, cz])
+        assert cxcycz.ndim == 1
         assert half_angle_rad >= 0
         assert 0.99 <= np.linalg.norm(cxcycz) <= 1.01
         third_neighbor_angle_rad = np.max(
@@ -96,26 +118,29 @@ class HemisphereHistogram:
             faces_touching_vidx = self.bin_geometry.vertices_to_faces_map[vidx]
             for face in faces_touching_vidx:
                 faces.add(face)
-        self._assign(list(faces))
+        self._assign(np.array(list(faces)))
 
     def assign_cone_cx_cy(self, cx, cy, half_angle_rad):
         cz = spherical_coordinates.restore_cz(cx=cx, cy=cy)
-        cxcycz = np.c_[cx, cy, cz]
-        return self.assign_cone_cxcycz(
-            cxcycz=cxcycz, half_angle_rad=half_angle_rad
+        return self.assign_cone_cx_cy_cz(
+            cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
         )
 
     def assign_cone_azimuth_zenith(
         self, azimuth_rad, zenith_rad, half_angle_rad
     ):
-        cxcycz = spherical_coordinates.az_zd_to_cx_cy_cz(
+        cx, cy, cz = spherical_coordinates.az_zd_to_cx_cy_cz(
             azimuth_rad=azimuth_rad, zenith_rad=zenith_rad
         )
-        return self.assign_cone_cxcycz(
-            cxcycz=cxcycz, half_angle_rad=half_angle_rad
+        return self.assign_cone_cx_cy_cz(
+            cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
         )
 
     def _assign(self, faces):
+        faces = np.asarray(faces, dtype=int)
+        if faces.ndim == 0:
+            faces = faces[np.newaxis]
+
         valid = faces >= 0
         self.overflow += np.sum(np.logical_not(valid))
         valid_faces = faces[valid]

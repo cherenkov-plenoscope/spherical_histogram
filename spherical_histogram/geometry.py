@@ -58,11 +58,11 @@ class HemisphereGeometry:
         """
         return self.tree.query_cx_cy(cx=cx, cy=cy)
 
-    def query_cxcycz(self, cxcycz):
+    def query_cx_cy_cz(self, cx, cy, cz):
         """
         Returns the index of the face hit by the vector cxcycz.
         """
-        return self.tree.query_cxcycz(cxcycz=cxcycz)
+        return self.tree.query_cx_cy_cz(cx, cy, cz)
 
     def plot(slef, path):
         """
