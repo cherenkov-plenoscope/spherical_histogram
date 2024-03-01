@@ -176,7 +176,7 @@ def estimate_solid_angles(vertices, faces, geometry="spherical"):
     return solid
 
 
-def make_obj(vertices, faces, mtlkey="sky"):
+def vertices_and_faces_to_obj(vertices, faces, mtlkey="sky"):
     """
     Makes an object-wavefron dict() from the mesh defined by
     vertices and faces.
@@ -207,6 +207,16 @@ def make_obj(vertices, faces, mtlkey="sky"):
     for face in faces:
         obj["mtl"][mtlkey].append({"v": face, "vn": face})
     return obj
+
+
+def obj_to_vertices_and_faces(obj, mtlkey="sky"):
+    vertices = []
+    faces = []
+    for v in obj["v"]:
+        vertices.append(v)
+    for f in obj["mtl"][mtlkey]:
+        faces.append(f["v"])
+    return np.asarray(vertices), np.array(faces)
 
 
 def plot(vertices, faces, path, faces_values=None, fill_color="RoyalBlue"):

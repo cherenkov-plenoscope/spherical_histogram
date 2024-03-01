@@ -7,7 +7,9 @@ import numpy as np
 
 def make_merlict_scenery_py(vertices, faces):
     scenery_py = merlict.scenery.init(default_medium="vacuum")
-    scenery_py["geometry"]["objects"]["hemisphere"] = mesh.make_obj(
+    scenery_py["geometry"]["objects"][
+        "hemisphere"
+    ] = mesh.vertices_and_faces_to_obj(
         vertices=vertices, faces=faces, mtlkey="sky"
     )
     scenery_py["materials"]["surfaces"][

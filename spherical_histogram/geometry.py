@@ -14,27 +14,22 @@ class HemisphereGeometry:
 
     def __init__(
         self,
-        num_vertices,
-        max_zenith_distance_rad,
+        vertices,
+        faces,
     ):
         """
         Parameters
         ----------
-        num_vertices : int
-            A guideline for the number of vertices in the grid's mesh.
-            See mesh.make_vertices().
-        max_zenith_distance_rad : float
-            Vertices will only be put up to this zenith-distance.
-            The ring-vertices will be put right at this zenith-distance.
+        vertices : [[cx,cy,cz], [cx,cy,cz], ... ]
+            List of 3D vertices on the unit sphere (cx, cy, cz)
+        faces : [[a1,b1,c1], [a2, b2, c2], ... ]
+            List of indices to reference the three (exactly three) vertices
+            which form a face on the unit sphere.
         """
-        self._init_num_vertices = int(num_vertices)
-        self.max_zenith_distance_rad = float(max_zenith_distance_rad)
-        self.vertices = mesh.make_vertices(
-            num_vertices=self._init_num_vertices,
-            max_zenith_distance_rad=self.max_zenith_distance_rad,
-        )
+        self.vertices = vertices
+        self.faces = faces
+
         self.vertices_tree = scipy.spatial.cKDTree(data=self.vertices)
-        self.faces = mesh.make_faces(vertices=self.vertices)
         self.vertices_to_faces_map = mesh.estimate_vertices_to_faces_map(
             faces=self.faces, num_vertices=len(self.vertices)
         )
@@ -43,6 +38,17 @@ class HemisphereGeometry:
             faces=self.faces,
         )
         self.tree = tree.Tree(vertices=self.vertices, faces=self.faces)
+
+    @classmethod
+    def from_num_vertices_and_max_zenith_distance_rad(
+        cls, num_vertices, max_zenith_distance_rad
+    ):
+        vertices = mesh.make_vertices(
+            num_vertices=num_vertices,
+            max_zenith_distance_rad=max_zenith_distance_rad,
+        )
+        faces = mesh.make_faces(vertices=vertices)
+        return cls(vertices=vertices, faces=faces)
 
     def query_azimuth_zenith(self, azimuth_rad, zenith_rad):
         return self.tree.query_azimuth_zenith(
@@ -111,8 +117,4 @@ class HemisphereGeometry:
         mesh.plot(vertices=self.vertices, faces=self.faces, path=path)
 
     def __repr__(self):
-        return "{:s}(num_vertices={:d}, max_zenith_distance_rad={:f})".format(
-            self.__class__.__name__,
-            self._init_num_vertices,
-            self.max_zenith_distance_rad,
-        )
+        return "{:s}()".format(self.__class__.__name__)

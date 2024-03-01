@@ -37,7 +37,7 @@ class HemisphereHistogram:
         ``max_zenith_distance_rad`` to create a bin_geometry on the fly.
         """
         if bin_geometry is None:
-            self.bin_geometry = geometry.HemisphereGeometry(
+            self.bin_geometry = geometry.HemisphereGeometry.from_num_vertices_and_max_zenith_distance_rad(
                 num_vertices=num_vertices,
                 max_zenith_distance_rad=max_zenith_distance_rad,
             )
@@ -147,8 +147,6 @@ class HemisphereHistogram:
         )
 
     def __repr__(self):
-        return "{:s}(num_vertices={:d}, max_zenith_distance_rad={:f})".format(
+        return "{:s}()".format(
             self.__class__.__name__,
-            self.bin_geometry._init_num_vertices,
-            self.bin_geometry.max_zenith_distance_rad,
         )
