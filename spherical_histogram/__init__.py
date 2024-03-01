@@ -93,47 +93,28 @@ class HemisphereHistogram:
         self._assign(faces)
 
     def assign_cone_cx_cy_cz(self, cx, cy, cz, half_angle_rad):
-        """
-        Assign
-
-        Parameters
-        ----------
-        cx : float
-        """
-        cxcycz = np.asarray([cx, cy, cz])
-        assert cxcycz.ndim == 1
-        assert half_angle_rad >= 0
-        assert 0.99 <= np.linalg.norm(cxcycz) <= 1.01
-        third_neighbor_angle_rad = np.max(
-            self.bin_geometry.vertices_tree.query(x=cxcycz, k=3)[0]
+        self._assign(
+            self.bin_geometry.query_cone_cx_cy_cz(
+                cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
+            )
         )
-        query_angle_rad = np.max([half_angle_rad, third_neighbor_angle_rad])
-        vidx_in_cone = self.bin_geometry.vertices_tree.query_ball_point(
-            x=cxcycz,
-            r=query_angle_rad,
-        )
-
-        faces = set()  # count only once
-        for vidx in vidx_in_cone:
-            faces_touching_vidx = self.bin_geometry.vertices_to_faces_map[vidx]
-            for face in faces_touching_vidx:
-                faces.add(face)
-        self._assign(np.array(list(faces)))
 
     def assign_cone_cx_cy(self, cx, cy, half_angle_rad):
-        cz = spherical_coordinates.restore_cz(cx=cx, cy=cy)
-        return self.assign_cone_cx_cy_cz(
-            cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
+        self._assign(
+            self.bin_geometry.query_cone_cx_cy(
+                cx=cx, cy=cy, half_angle_rad=half_angle_rad
+            )
         )
 
     def assign_cone_azimuth_zenith(
         self, azimuth_rad, zenith_rad, half_angle_rad
     ):
-        cx, cy, cz = spherical_coordinates.az_zd_to_cx_cy_cz(
-            azimuth_rad=azimuth_rad, zenith_rad=zenith_rad
-        )
-        return self.assign_cone_cx_cy_cz(
-            cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
+        self._assign(
+            self.bin_geometry.query_cone_azimuth_zenith(
+                azimuth_rad=azimuth_rad,
+                zenith_rad=zenith_rad,
+                half_angle_rad=half_angle_rad,
+            )
         )
 
     def _assign(self, faces):

@@ -27,7 +27,7 @@ setuptools.setup(
     install_requires=[
         "spherical_coordinates",
         "solid_angle_utils",
-        "binning_utils",
+        "binning_utils_sebastian-achim-mueller",
         "triangle_mesh_io",
         "merlict",
         "svg_cartesian_plot",

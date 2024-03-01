@@ -2,6 +2,7 @@ from . import tree
 from . import mesh
 
 import numpy as np
+import spherical_coordinates
 import scipy
 from scipy import spatial
 
@@ -44,25 +45,64 @@ class HemisphereGeometry:
         self.tree = tree.Tree(vertices=self.vertices, faces=self.faces)
 
     def query_azimuth_zenith(self, azimuth_rad, zenith_rad):
-        """
-        Returns the index of the face hit at direction
-        (azimuth_rad, zenith_rad).
-        """
         return self.tree.query_azimuth_zenith(
             azimuth_rad=azimuth_rad, zenith_rad=zenith_rad
         )
 
     def query_cx_cy(self, cx, cy):
-        """
-        Returns the index of the face hit at direction (cx, cy).
-        """
         return self.tree.query_cx_cy(cx=cx, cy=cy)
 
     def query_cx_cy_cz(self, cx, cy, cz):
-        """
-        Returns the index of the face hit by the vector cxcycz.
-        """
         return self.tree.query_cx_cy_cz(cx, cy, cz)
+
+    def query_cone_cx_cy(self, cx, cy, half_angle_rad):
+        cz = spherical_coordinates.restore_cz(cx=cx, cy=cy)
+        return self.query_cone_cx_cy_cz(
+            cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
+        )
+
+    def query_cone_azimuth_zenith(
+        self, azimuth_rad, zenith_rad, half_angle_rad
+    ):
+        cx, cy, cz = spherical_coordinates.az_zd_to_cx_cy_cz(
+            azimuth_rad=azimuth_rad, zenith_rad=zenith_rad
+        )
+        return self.query_cone_cx_cy_cz(
+            cx=cx, cy=cy, cz=cz, half_angle_rad=half_angle_rad
+        )
+
+    def query_cone_cx_cy_cz(self, cx, cy, cz, half_angle_rad):
+        cxcycz = np.asarray([cx, cy, cz])
+        assert cxcycz.ndim == 1
+        assert half_angle_rad >= 0
+        assert 0.99 <= np.linalg.norm(cxcycz) <= 1.01
+
+        # find the angle to the 3rd nearest neighbor vertex
+        # -------------------------------------------------
+        third_neighbor_angle_rad = np.max(
+            self.vertices_tree.query(x=cxcycz, k=3)[0]
+        )
+
+        # make sure the query angle is at least as big as the angle
+        # to the 3rd nearest neighbor vertex
+        # ---------------------------------------------------------
+        query_angle_rad = np.max([half_angle_rad, third_neighbor_angle_rad])
+
+        # query vertices
+        # --------------
+        vidx_in_cone = self.vertices_tree.query_ball_point(
+            x=cxcycz,
+            r=query_angle_rad,
+        )
+
+        # identify the faces related to the vertices
+        # ------------------------------------------
+        faces = set()  # count each face only once
+        for vidx in vidx_in_cone:
+            faces_touching_vidx = self.vertices_to_faces_map[vidx]
+            for face in faces_touching_vidx:
+                faces.add(face)
+        return np.array(list(faces))
 
     def plot(slef, path):
         """
