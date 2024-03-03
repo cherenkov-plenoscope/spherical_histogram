@@ -3,6 +3,7 @@ from . import mesh
 
 import numpy as np
 import spherical_coordinates
+import solid_angle_utils
 import scipy
 from scipy import spatial
 
@@ -110,6 +111,52 @@ class HemisphereGeometry:
                 faces.add(face)
         return np.array(list(faces))
 
+    def query_cone_weiths_azimuth_zenith(
+        self,
+        azimuth_rad,
+        zenith_rad,
+        half_angle_rad,
+        num_probing_rays_per_sr=4e5,
+        path=None,
+    ):
+        cone_solid_angle_sr = solid_angle_utils.cone.solid_angle(
+            half_angle_rad=half_angle_rad
+        )
+        num_probing_rays = cone_solid_angle_sr * num_probing_rays_per_sr
+        num_probing_rays = int(np.ceil(num_probing_rays))
+        seed = np.abs(hash((azimuth_rad, zenith_rad, half_angle_rad)))
+        prng = np.random.Generator(np.random.PCG64(seed))
+
+        _cx, _cy, _cz = draw_in_cone(
+            prng=prng,
+            azimuth_rad=azimuth_rad,
+            zenith_rad=zenith_rad,
+            half_angle_rad=half_angle_rad,
+            size=num_probing_rays,
+        )
+
+        _faces = self.query_cx_cy_cz(_cx, _cy, _cz)
+
+        if len(_faces) == 0:
+            out = (np.array([], dtype=int), np.array([], dtype=float))
+        else:
+            unique_faces, counts = np.unique(_faces, return_counts=True)
+            weights = counts / np.sum(counts)
+            out = unique_faces, weights
+
+        if path is not None:
+            w = np.zeros(len(self.faces))
+            w[out[0]] = out[1]
+            w = w / np.max(w)
+            mesh.plot(
+                vertices=self.vertices,
+                faces=self.faces,
+                faces_values=w,
+                path=path,
+            )
+
+        return out
+
     def plot(slef, path):
         """
         Writes a plot with the grid's faces to path.
@@ -118,3 +165,40 @@ class HemisphereGeometry:
 
     def __repr__(self):
         return "{:s}()".format(self.__class__.__name__)
+
+
+def draw_in_cone(prng, azimuth_rad, zenith_rad, half_angle_rad, size):
+    min_half_angle_rad = 0.0
+
+    # Adopted from CORSIKA
+    rd2 = prng.uniform(size=size)
+    ct1 = np.cos(min_half_angle_rad)
+    ct2 = np.cos(half_angle_rad)
+    ctt = rd2 * (ct2 - ct1) + ct1
+    theta = np.arccos(ctt)
+    phi = prng.uniform(low=0.0, high=np.pi * 2.0, size=size)
+
+    # temporary cartesian coordinates
+    cx1, cy1, cz1 = spherical_coordinates.az_zd_to_cx_cy_cz(
+        azimuth_rad=phi, zenith_rad=theta
+    )
+    ____0 = 0.0
+    ____1 = 1.0
+
+    # Rotate around y axis
+    cosZd = np.cos(zenith_rad)
+    sinZd = np.sin(zenith_rad)
+
+    cx2 = +cx1 * cosZd + cy1 * ____0 + cz1 * sinZd
+    cy2 = +cx1 * ____0 + cy1 * ____1 + cz1 * ____0
+    cz2 = -cx1 * sinZd + cy1 * ____0 + cz1 * cosZd
+
+    cosAz = np.cos(azimuth_rad)
+    sinAz = np.sin(azimuth_rad)
+
+    # rotate around z
+    cx3 = +cx2 * cosAz - cy2 * sinAz + cz2 * ____0
+    cy3 = +cx2 * sinAz + cy2 * cosAz + cz2 * ____0
+    cz3 = +cx2 * ____0 + cy2 * ____0 + cz2 * ____1
+
+    return cx3, cy3, cz3
