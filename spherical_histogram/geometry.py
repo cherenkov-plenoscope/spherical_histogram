@@ -39,6 +39,10 @@ class HemisphereGeometry:
             faces=self.faces,
         )
         self.tree = tree.Tree(vertices=self.vertices, faces=self.faces)
+        self.faces_neighbors = mesh.find_faces_neighbors(
+            faces=self.faces,
+            vertices_to_faces_map=self.vertices_to_faces_map,
+        )
 
     @classmethod
     def from_num_vertices_and_max_zenith_distance_rad(

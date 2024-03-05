@@ -246,3 +246,49 @@ def plot(vertices, faces, path, faces_values=None, fill_color="RoyalBlue"):
     )
     scp.hemisphere.ax_add_grid(ax=ax)
     scp.fig_write(fig=fig, path=path)
+
+
+def find_faces_potential_neighbors(faces, vertices_to_faces_map):
+    mm = {}
+    for iface in range(len(faces)):
+        pnn = set()
+        for v in faces[iface]:
+            for jface in vertices_to_faces_map[v]:
+                pnn.add(jface)
+        pnn.remove(iface)
+        mm[iface] = list(pnn)
+    return mm
+
+
+def find_faces_neighbors(faces, vertices_to_faces_map):
+    pn = find_faces_potential_neighbors(
+        faces=faces,
+        vertices_to_faces_map=vertices_to_faces_map,
+    )
+    nn = {}
+    for iface in range(len(faces)):
+        iset = set(faces[iface])
+        for pface in pn[iface]:
+            pset = set(faces[pface])
+            if len(iset.intersection(pset)) == 2:
+                if iface not in nn:
+                    nn[iface] = [pface]
+                else:
+                    nn[iface].append(pface)
+    return nn
+
+
+def fill_faces_mask_if_two_neighbors_true(faces_mask, faces_neighbors):
+    assert len(faces_mask) == len(faces_neighbors)
+    out = np.asarray(faces_mask).copy()
+    num_neighbors_high = np.zeros(len(faces_mask), int)
+
+    for iface in range(len(faces_mask)):
+        for nface in faces_neighbors[iface]:
+            if faces_mask[nface]:
+                num_neighbors_high[iface] += 1
+
+    for iface in range(len(faces_mask)):
+        if num_neighbors_high[iface] >= 2:
+            out[iface] = True
+    return out
