@@ -292,3 +292,100 @@ def fill_faces_mask_if_two_neighbors_true(faces_mask, faces_neighbors):
         if num_neighbors_high[iface] >= 2:
             out[iface] = True
     return out
+
+
+def list_faces_inside_onedge_outside_zenith_distance(
+    faces, vertices, zenith_rad
+):
+    inside = []
+    onedge = []
+    outside = []
+
+    for iface in range(len(faces)):
+        v0 = vertices[faces[iface][0]]
+        v1 = vertices[faces[iface][1]]
+        v2 = vertices[faces[iface][2]]
+
+        _, z0 = spherical_coordinates.cx_cy_cz_to_az_zd(
+            cx=v0[0], cy=v0[1], cz=v0[2]
+        )
+        _, z1 = spherical_coordinates.cx_cy_cz_to_az_zd(
+            cx=v1[0], cy=v1[1], cz=v1[2]
+        )
+        _, z2 = spherical_coordinates.cx_cy_cz_to_az_zd(
+            cx=v2[0], cy=v2[1], cz=v2[2]
+        )
+
+        o0 = z0 >= zenith_rad
+        o1 = z1 >= zenith_rad
+        o2 = z2 >= zenith_rad
+
+        if o0 and o1 and o2:
+            outside.append(iface)
+        elif not o0 and not o1 and not o2:
+            inside.append(iface)
+        else:
+            onedge.append(iface)
+
+    return inside, onedge, outside
+
+
+def draw_point_on_triangle(prng, a, b, c):
+    """
+             c---------------t
+            / -             /
+       ac /     -         /
+        /         -     /
+      /             - /
+    a----------------b
+           ab
+    """
+    _a = np.asarray(a)
+    _b = np.asarray(b)
+    _c = np.asarray(c)
+
+    ab = _b - _a
+    ac = _c - _a
+
+    u1 = prng.uniform()
+    u2 = prng.uniform()
+
+    if u1 + u2 > 1.0:
+        u1 = 1 - u1
+        u2 = 1 - u2
+
+    return _a + ab * u1 + ac * u2
+
+
+def is_point_in_triangle(a, b, c, p):
+    a = np.asarray(a)
+    b = np.asarray(b)
+    c = np.asarray(c)
+    p = np.asarray(p)
+
+    norm = np.linalg.norm
+    cross = np.cross
+
+    ab = b - a
+    ac = c - a
+
+    pa = a - p
+    pb = b - p
+    pc = c - p
+
+    area = norm(cross(ab, ac)) / 2.0
+
+    alpha = norm(cross(pb, pc)) / (2 * area)
+    beta = norm(cross(pc, pa)) / (2 * area)
+    gamma = norm(cross(pa, pb)) / (2 * area)
+
+    _range = (alpha + beta + gamma) / 3.0
+    epsilon = 1e-6 * _range
+
+    if 0.0 <= alpha <= 1.0 and 0.0 <= beta <= 1.0 and 0.0 <= gamma <= 1.0:
+        if np.abs(alpha + beta + gamma - 1.0) < epsilon:
+            return True
+        else:
+            return False
+    else:
+        return False
