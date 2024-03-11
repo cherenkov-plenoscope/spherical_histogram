@@ -330,6 +330,102 @@ def list_faces_inside_onedge_outside_zenith_distance(
     return inside, onedge, outside
 
 
+def estimate_intermediate_vertex_at_zenith(
+    a,
+    b,
+    zenith_rad,
+    epsilon_rad=1e-9,
+    max_num_iterations=1000,
+):
+    assert max_num_iterations > 0
+    assert epsilon_rad > 0
+
+    a = np.asarray(a)
+    b = np.asarray(b)
+
+    a = a / np.linalg.norm(a)
+    b = b / np.linalg.norm(b)
+
+    _, a_zd = spherical_coordinates.cx_cy_cz_to_az_zd(
+        cx=a[0], cy=a[1], cz=a[2]
+    )
+    _, b_zd = spherical_coordinates.cx_cy_cz_to_az_zd(
+        cx=b[0], cy=b[1], cz=b[2]
+    )
+
+    assert np.abs(a_zd - b_zd) > epsilon_rad
+
+    min_zd = min([a_zd, b_zd])
+    max_zd = max([a_zd, b_zd])
+
+    axis = np.cross(a, b)
+    alpha = 0.5 * spherical_coordinates.angle_between_xyz(a, b)
+    inum = 0
+    delta_rad = 2 * np.pi
+    proto = [0, 0, 0]
+
+    rot_matrix = rot_matrix_from_axis_angle(axis=axis, angle_rad=alpha)
+    proto = np.dot(rot_matrix, a)
+    _, p_zd = spherical_coordinates.cx_cy_cz_to_az_zd(
+        proto[0], proto[1], proto[2]
+    )
+    if p_zd < min_zd or p_zd > max_zd:
+        alpha *= -1.0
+
+    while True:
+        inum += 1
+        assert inum <= max_num_iterations
+
+        rot_matrix = rot_matrix_from_axis_angle(axis=axis, angle_rad=alpha)
+        proto = np.dot(rot_matrix, a)
+
+        _, p_zd = spherical_coordinates.cx_cy_cz_to_az_zd(
+            proto[0], proto[1], proto[2]
+        )
+
+        delta_rad = zenith_rad - p_zd
+
+        if np.abs(delta_rad) < epsilon_rad:
+            break
+
+        alpha = alpha + 0.5 * delta_rad
+
+    return proto
+
+
+def rot_matrix_from_axis_angle(axis, angle_rad):
+    a = np.asarray(axis)
+    a = a / np.linalg.norm(a)
+
+    x = a[0]
+    y = a[1]
+    z = a[2]
+
+    cT = np.cos(angle_rad)
+    sT = np.sin(angle_rad)
+
+    r00 = cT + x * x * (1 - cT)
+    r01 = x * y * (1 - cT) - z * sT
+    r02 = x * z * (1 - cT) + y * sT
+
+    r10 = y * x * (1 - cT) + z * sT
+    r11 = cT + y * y * (1 - cT)
+    r12 = y * z * (1 - cT) - x * sT
+
+    r20 = z * x * (1 - cT) - y * sT
+    r21 = z * y * (1 - cT) + x * sT
+    r22 = cT + z * z * (1 - cT)
+
+    R = np.array(
+        [
+            [r00, r01, r02],
+            [r10, r11, r12],
+            [r20, r21, r22],
+        ]
+    )
+    return R
+
+
 def draw_point_on_triangle(prng, a, b, c):
     """
              c---------------t
