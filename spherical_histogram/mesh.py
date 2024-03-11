@@ -71,7 +71,7 @@ def make_vertices(
     for inner_vertex in inner_vertices:
         delta_rad, vidx = _horizon_vertices_tree.query(inner_vertex)
 
-        if delta_rad > _face_expected_edge_angle_rad:
+        if delta_rad > 0.5 * _face_expected_edge_angle_rad:
             vertices.append(inner_vertex)
 
     for horizon_vertex in horizon_vertices:
