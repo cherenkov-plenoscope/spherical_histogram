@@ -150,33 +150,3 @@ class HemisphereHistogram:
         return "{:s}()".format(
             self.__class__.__name__,
         )
-
-
-def mask_fewest_bins_to_contain_quantile(bin_counts, quantile):
-    """
-    Parameters
-    ----------
-    bin_counts : array_like
-        Content of the bins. With bin_counts >= 0.
-    quantile : float
-        Quantile to be contained. 0.0 <= quantile <= 1.0
-
-    Returns
-    -------
-    mask : array_like bools
-        Masks the bins which contain the desired quantile
-    """
-    assert 0.0 <= quantile <= quantile
-    bin_counts = np.asarray(bin_counts).copy()
-
-    osort = np.argsort((-1) * bin_counts)
-    part = 0.0
-    target = quantile * np.sum(bin_counts)
-    mask = np.zeros(bin_counts.shape[0], dtype=bool)
-    for ii in range(len(osort)):
-        if part + bin_counts[osort[ii]] < target:
-            part += bin_counts[osort[ii]]
-            mask[osort[ii]] = True
-        else:
-            break
-    return mask
