@@ -485,3 +485,17 @@ def is_point_in_triangle(a, b, c, p):
             return False
     else:
         return False
+
+
+def average(faces, vertices, faces_weights):
+    total = np.zeros(3)
+
+    for i in range(len(faces)):
+        v0 = vertices[faces[i]][0]
+        v1 = vertices[faces[i]][1]
+        v2 = vertices[faces[i]][2]
+        vm = (v0 + v1 + v2) / 3.0
+        vm = vm * (faces_weights[i] / np.linalg.norm(vm))
+        total += vm
+
+    return total / np.linalg.norm(total)
