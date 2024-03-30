@@ -219,7 +219,14 @@ def obj_to_vertices_and_faces(obj, mtlkey="sky"):
     return np.asarray(vertices), np.array(faces)
 
 
-def plot(vertices, faces, path, faces_values=None, fill_color="RoyalBlue"):
+def plot(
+    vertices,
+    faces,
+    path,
+    faces_values=None,
+    fill_color="RoyalBlue",
+    show_grid=True,
+):
     """
     Writes an svg figure to path.
     """
@@ -244,7 +251,8 @@ def plot(vertices, faces, path, faces_values=None, fill_color="RoyalBlue"):
         max_radius=1.0,
         **mesh_look,
     )
-    scp.hemisphere.ax_add_grid(ax=ax)
+    if show_grid:
+        scp.hemisphere.ax_add_grid(ax=ax)
     scp.fig_write(fig=fig, path=path)
 
 

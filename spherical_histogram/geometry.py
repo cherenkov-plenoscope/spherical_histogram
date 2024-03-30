@@ -161,11 +161,11 @@ class HemisphereGeometry:
 
         return out
 
-    def plot(slef, path):
+    def plot(self, **kwargs):
         """
         Writes a plot with the grid's faces to path.
         """
-        mesh.plot(vertices=self.vertices, faces=self.faces, path=path)
+        mesh.plot(vertices=self.vertices, faces=self.faces, **kwargs)
 
     def __repr__(self):
         return "{:s}()".format(self.__class__.__name__)
