@@ -25,7 +25,7 @@ setuptools.setup(
     ],
     package_data={"spherical_histogram": []},
     install_requires=[
-        "spherical_coordinates",
+        "spherical_coordinates>=0.1.6",
         "solid_angle_utils",
         "binning_utils_sebastian-achim-mueller",
         "triangle_mesh_io",
