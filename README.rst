@@ -5,6 +5,85 @@ Spherical Histogram
 
 Histograms directions into a hemisphere with bins of roughly the same solid angle.
 
+*******
+Install
+*******
+
+.. code-block:: bash
+
+    pip install spherical_histogram
+
+
+*****
+Usage
+*****
+
+First a ``HemisphereHistogram`` histogram is initialized.
+When providing general parameters for the desired binning such as
+``num_vertices`` and ``max_zenith_distance_rad``, the geometry of
+the hemisphere will be made on the fly using a Fibonacci spacing.
+
+.. code-block:: python
+
+    import spherical_histogram
+    import numpy as np
+
+    hist = spherical_histogram.HemisphereHistogram(
+        num_vertices=200,
+        max_zenith_distance_rad=np.deg2rad(90),
+    )
+
+Or by defining the binning explicitly using a triangle mesh with
+``vertices`` and ``faces``.
+
+.. code-block:: python
+
+    import spherical_histogram
+
+    geom = spherical_histogram.geometry.HemisphereGeometry(
+        vertices=[[0, 0, 1], [0, 0.02, 1], [0.02, 0, 1]],
+        faces=[[0, 1, 2]],
+    )
+
+    hist = spherical_histogram.HemisphereHistogram(bin_geometry=geom)
+
+Afer initializing, we can histogram directions. This can be done multiple
+times with any of the three options
+
+Azimuth and zenith angle
+
+.. code-block:: python
+
+    hist.assign_azimuth_zenith(azimuth_rad=0.2, zenith_rad=0.1)
+
+The direction vector's ``x`` and ``y`` components
+
+.. code-block:: python
+
+    hist.assign_cx_cy(cx=0.3, cy=0.2)
+
+Or with the full direction vector (``x``, ``y``, and ``z``).
+
+.. code-block:: python
+
+    hist.assign_cx_cy_cz(cx=0.2, cy=0.3, cz=np.sqrt(1 - 0.2 ** 2 - 0.3 ** 2))
+
+After all directions where assigned to the histogram, the result is found in
+
+.. code-block:: python
+
+    hist.bin_counts
+
+and in
+
+.. code-block:: python
+
+    hist.overflow
+
+where ``overflow`` counts all the directions which could not be assigned to a bin
+and ``bin_counts`` is an array with one bount for each face in the hemispherical
+mesh of triangles.
+
 |HemisphereGrid|
 
 |FigSolidAngleDistribution|
