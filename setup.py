@@ -28,9 +28,9 @@ setuptools.setup(
         "spherical_coordinates>=0.1.6",
         "solid_angle_utils>=0.1.2",
         "binning_utils_sebastian-achim-mueller>=0.0.19",
-        "triangle_mesh_io",
-        "merlict",
-        "svg_cartesian_plot",
+        "triangle_mesh_io>=0.0.4",
+        "merlict>=0.1.7.1.9.9",
+        "svg_cartesian_plot>=0.0.11",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
