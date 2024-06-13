@@ -121,10 +121,10 @@ rather fast and efficient.
     :target: https://opensource.org/licenses/MIT
 
 .. |FigSolidAngleDistribution| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/blob/main/readme/skymap_solid_angles.jpg?raw=True
-    :width: 50% 
+    :width: 50%
 
 .. |FigExampleWithCherenkovLight| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/blob/main/readme/000000.primary_to_cherenkov.jpg?raw=True
-    :width: 50% 
+    :width: 50%
 
 .. |HemisphereGrid| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/blob/main/readme/skymap_render_crop.jpg?raw=True
-    :width: 50% 
+    :width: 50%
