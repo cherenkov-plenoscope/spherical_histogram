@@ -19,7 +19,7 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/cherenkov-plenoscope/spherical_histogram",
     author="Sebastian Achim Mueller",
-    author_email="Sebastian Achim Mueller@mail",
+    author_email="sebastian-achim.mueller@mpi-hd.mpg.de",
     packages=[
         "spherical_histogram",
     ],
