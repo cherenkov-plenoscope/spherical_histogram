@@ -3,7 +3,7 @@ Spherical Histogram
 ###################
 |TestStatus| |PyPiStatus| |BlackStyle| |BlackPackStyle| |MITLicenseBadge|
 
-Histograms directions in a hemisphere.
+Histograms directions into a hemisphere with bins of roughly the same solid angle.
 
 |HemisphereGrid|
 
@@ -27,7 +27,10 @@ Histograms directions in a hemisphere.
     :target: https://opensource.org/licenses/MIT
 
 .. |FigSolidAngleDistribution| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/blob/main/readme/skymap_solid_angles.jpg?raw=True
+    :width: 50% 
 
 .. |FigExampleWithCherenkovLight| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/blob/main/readme/000000.primary_to_cherenkov.jpg?raw=True
+    :width: 50% 
 
 .. |HemisphereGrid| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/blob/main/readme/skymap_render_crop.jpg?raw=True
+    :width: 50% 
