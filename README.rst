@@ -5,6 +5,11 @@ Spherical Histogram
 
 Histograms directions into a hemisphere with bins of roughly the same solid angle.
 
+|FigExampleWithCherenkovLight|
+
+An example histogram of the sky down to zenith distance of 70``deg`` showing the
+Cherenkov emission of an atmospheric shower with millions of photon directions in it.
+
 *******
 Install
 *******
@@ -32,6 +37,17 @@ the hemisphere will be made on the fly using a Fibonacci spacing.
         num_vertices=200,
         max_zenith_distance_rad=np.deg2rad(90),
     )
+
+|HemisphereGrid|
+
+A Fibonacci spaced mesh of triangles which defines the bins of the
+histogram.
+
+|FigSolidAngleDistribution|
+
+Distribution of solid angles in the upper mesh. The triangles have
+similar zizes. Outliers are mostly caused by the hard cut on the
+zenith distance.
 
 Or by defining the binning explicitly using a triangle mesh with
 ``vertices`` and ``faces``.
@@ -84,11 +100,10 @@ where ``overflow`` counts all the directions which could not be assigned to a bi
 and ``bin_counts`` is an array with one bount for each face in the hemispherical
 mesh of triangles.
 
-|HemisphereGrid|
-
-|FigSolidAngleDistribution|
-
-|FigExampleWithCherenkovLight|
+The ``assign`` functions accept both scalar and array like parameters for an easy
+``numpy`` integration. When the directions are assignes in array like parameters
+the loop for the assignment happens in the underlying ``c`` implementation and is
+rather fast and efficient.
 
 .. |TestStatus| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/actions/workflows/test.yml/badge.svg?branch=main
     :target: https://github.com/cherenkov-plenoscope/spherical_histogram/actions/workflows/test.yml
