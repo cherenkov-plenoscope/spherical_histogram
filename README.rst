@@ -1,9 +1,11 @@
 ###################
-spherical_histogram
+Spherical Histogram
 ###################
 |TestStatus| |PyPiStatus| |BlackStyle| |BlackPackStyle| |MITLicenseBadge|
 
-Lorem ipsum...
+Histograms directions in a hemisphere.
+
+
 
 .. |TestStatus| image:: https://github.com/cherenkov-plenoscope/spherical_histogram/actions/workflows/test.yml/badge.svg?branch=main
     :target: https://github.com/cherenkov-plenoscope/spherical_histogram/actions/workflows/test.yml
