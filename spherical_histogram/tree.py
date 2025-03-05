@@ -6,16 +6,49 @@ import numpy as np
 
 
 def make_merlict_scenery_py(vertices, faces):
-    scenery_py = merlict.scenery.init(default_medium="vacuum")
+    scenery_py = merlict.scenery.init()
     scenery_py["geometry"]["objects"][
         "hemisphere"
     ] = mesh.vertices_and_faces_to_obj(
         vertices=vertices, faces=faces, mtlkey="sky"
     )
-    scenery_py["materials"]["surfaces"][
-        "perfect_absorber"
-    ] = merlict.materials.surfaces.init(key="perfect_absorber")
 
+    # spectra
+    scenery_py["materials"]["spectra"]["vacuum_absorption"] = (
+        merlict.materials.spectra.init_from_resources("vacuum_absorption")
+    )
+    scenery_py["materials"]["spectra"]["vacuum_refraction"] = (
+        merlict.materials.spectra.init_from_resources("vacuum_refraction")
+    )
+    scenery_py["materials"]["spectra"]["perfect_absorber_reflection"] = (
+        merlict.materials.spectra.init_from_resources(
+            "perfect_absorber_reflection"
+        )
+    )
+
+    # media
+    scenery_py["materials"]["media"]["vacuum"] = {
+        "refraction_spectrum": "vacuum_refraction",
+        "absorption_spectrum": "vacuum_absorption",
+    }
+    scenery_py["materials"]["default_medium"] = "vacuum"
+
+    # surfaces
+    scenery_py["materials"]["surfaces"]["absorber"] = {
+        "type": "cook-torrance",
+        "reflection_spectrum": "perfect_absorber_reflection",
+        "diffuse_weight": 0.0,
+        "specular_weight": 0.0,
+        "roughness": 0.0,
+    }
+
+    # boundary layers
+    scenery_py["materials"]["boundary_layers"]["abc"] = {
+        "inner": {"medium": "vacuum", "surface": "absorber"},
+        "outer": {"medium": "vacuum", "surface": "absorber"},
+    }
+
+    # geometry
     scenery_py["geometry"]["relations"]["children"].append(
         {
             "id": 0,
@@ -25,10 +58,7 @@ def make_merlict_scenery_py(vertices, faces):
             "mtl": {"sky": "abc"},
         }
     )
-    scenery_py["materials"]["boundary_layers"]["abc"] = {
-        "inner": {"medium": "vacuum", "surface": "perfect_absorber"},
-        "outer": {"medium": "vacuum", "surface": "perfect_absorber"},
-    }
+
     return scenery_py
 
 
